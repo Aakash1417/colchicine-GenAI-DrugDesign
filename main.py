@@ -1,6 +1,8 @@
 from src.reinvent_toml_parameters import get_main_section, get_parameters_section,get_learning_strategy_section,get_stage1_section,get_stage2_section
 import os
 import subprocess
+import shutil
+import sys
 
 def combine_sections(output_dir):
     """Combine all sections into a single TOML string."""
@@ -26,7 +28,12 @@ if __name__ == "__main__":
     OUTPUT_DIR = "experiment"
     CONFIG_FILE = f"{OUTPUT_DIR}/output_config.toml"
     LOG_FILE = f"{OUTPUT_DIR}/staged_learning.log"
-    
+
+    if len(sys.argv) > 1 and sys.argv[1].lower() == "clear":
+        if os.path.exists(OUTPUT_DIR):
+            print(f"Clearing '{OUTPUT_DIR}' folder...")
+            shutil.rmtree(OUTPUT_DIR)
+
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     create_config_toml(OUTPUT_DIR, CONFIG_FILE)
     

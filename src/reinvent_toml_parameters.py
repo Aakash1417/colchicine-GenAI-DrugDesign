@@ -40,6 +40,14 @@ penalty_multiplier = 0.5
 '''
 
 def get_stage1_section(output_dir):
+    #TODO: unwated smarts filtering
+    # R1 or R2 substitutions that are not -O-R (i.e., no single-bonded O to a carbon)
+    # "[*:1][!O]",         # R1 is not attached to O
+    # "[*:1]O[!#6]",       # R1 has O, but not bonded to carbon (bad ether)
+    # "[*:2][!O]",
+    # "[*:2]O[!#6]",
+    # "[*:3][!#9;!#17;!#35;!#53]",  # R3 not bonded to F, Cl, Br, or I
+    # "[*:5][O,S,N;!$([O,S,N][#6])]"  # R5 has O/S/N but not single bonded to carbon
     return f'''### Stage 1
 [[stage]]
 

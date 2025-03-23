@@ -1,4 +1,1 @@
-
-
-[*:1]Cc2ccc1cncc(C[*:2])c1c2
-[*:1]Cc2cnc1cncc(C[*:2])c1c2
+[*:4]NC1CCC2=C([*:3])C([*:2])=C(OC)C([*:1])=C2C3=CC=C([*:5])C(C=C13)=O
