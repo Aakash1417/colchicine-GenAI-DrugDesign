@@ -1,13 +1,13 @@
-def get_main_section():
-    return '''run_type = "staged_learning"
+def get_main_section(output_dir):
+    return f'''run_type = "staged_learning"
 device = "cuda:0"
-tb_logdir = "tb_logs"
-json_out_config = "_staged_learning.json"
+tb_logdir = "{output_dir}/tb_logs"
+json_out_config = "{output_dir}/_staged_learning.json"
 '''
 
-def get_parameters_section():
-    return '''[parameters]
-summary_csv_prefix = "staged_learning"
+def get_parameters_section(output_dir):
+    return f'''[parameters]
+summary_csv_prefix = "{output_dir}/staged_learning"
 use_checkpoint = false
 purge_memories = false
 
@@ -39,11 +39,11 @@ minsimilarity = 0.4
 penalty_multiplier = 0.5
 '''
 
-def get_stage1_section():
-    return '''### Stage 1
+def get_stage1_section(output_dir):
+    return f'''### Stage 1
 [[stage]]
 
-chkpt_file = 'test1.chkpt'
+chkpt_file = '{output_dir}/test1.chkpt'
 
 termination = "simple"
 max_score = 0.6
@@ -102,11 +102,11 @@ transform.coef_si = 20.0
 transform.coef_se = 20.0
 '''
 
-def get_stage2_section():
-    return '''### Stage 2
+def get_stage2_section(output_dir):
+    return f'''### Stage 2
 [[stage]]
 
-chkpt_file = 'test2.chkpt'
+chkpt_file = '{output_dir}/test2.chkpt'
 
 termination = "simple"
 max_score = 0.7
