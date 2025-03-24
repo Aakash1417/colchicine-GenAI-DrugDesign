@@ -39,7 +39,7 @@ minsimilarity = 0.4
 penalty_multiplier = 0.5
 '''
 
-def get_stage1_section(output_dir):
+def get_stage1_scoring(output_dir):
     #TODO: unwated smarts filtering
     # R1 or R2 substitutions that are not -O-R (i.e., no single-bonded O to a carbon)
     # "[*:1][!O]",         # R1 is not attached to O
@@ -110,7 +110,7 @@ transform.coef_si = 20.0
 transform.coef_se = 20.0
 '''
 
-def get_stage2_section(output_dir):
+def get_rdkit_scoring(output_dir):
     return f'''### Stage 2
 [[stage]]
 
@@ -130,4 +130,41 @@ type = "geometric_mean"
 [[stage.scoring.component.QED.endpoint]]
 weight = 0.5
 name = "QED Score"
+
+[[stage.scoring.component]]
+[stage.scoring.component.SAScore]
+
+[[stage.scoring.component.SAScore.endpoint]]
+weight = 0.5
+name = "SA Score"
 '''
+
+def get_custom_qsar_scoring(output_dir):
+    return f'''### Stage 3
+[[stage]]
+
+chkpt_file = '{output_dir}/test3.chkpt'
+
+termination = "simple"
+max_score = 0.7
+min_steps = 10
+max_steps = 100
+
+[stage.scoring]
+type = "geometric_mean"
+
+[[stage.scoring.component]]
+[stage.scoring.component.ExternalProcess]
+
+[[stage.scoring.component.ExternalProcess.endpoint]]
+weight = 0.6
+name = "Custom QSAR model"
+
+params.executable = "../venv-reinvent4/bin/python"
+params.args = "chemprop_qsar.py XGBoost_Descriptors_pIC50_MCF-7.joblib"
+
+'''
+    # [component.ExternalProcess.transform]
+    # type = "sigmoid"
+    # low = 5.0
+    # high = 9.0

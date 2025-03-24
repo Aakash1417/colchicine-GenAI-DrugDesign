@@ -1,4 +1,4 @@
-from src.reinvent_toml_parameters import get_main_section, get_parameters_section,get_learning_strategy_section,get_stage1_section,get_stage2_section
+from src.reinvent_toml_parameters import get_main_section, get_parameters_section,get_learning_strategy_section,get_stage1_scoring,get_rdkit_scoring, get_custom_qsar_scoring
 import os
 import subprocess
 import shutil
@@ -11,8 +11,9 @@ def combine_sections(output_dir):
         get_parameters_section(output_dir),
         get_learning_strategy_section(),
         # get_diversity_filter_section(), # TODO get this working later
-        get_stage1_section(output_dir),
-        get_stage2_section(output_dir)
+        get_stage1_scoring(output_dir),
+        get_rdkit_scoring(output_dir),
+        get_custom_qsar_scoring(output_dir)
     ]
     return "\n".join(sections)
 
