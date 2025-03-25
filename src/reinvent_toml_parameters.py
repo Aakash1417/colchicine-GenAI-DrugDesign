@@ -138,6 +138,7 @@ name = "QED Score"
 weight = 0.5
 name = "SA Score"
 '''
+    #TODO: split the scoring of sascore and qed into 2 different
 
 def get_custom_qsar_scoring(output_dir, cell_line_name):
     return f'''### Stage 3
