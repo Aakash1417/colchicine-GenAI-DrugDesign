@@ -28,9 +28,37 @@ def create_config_toml(output_dir, filename, cell_line_name):
     print(f"TOML configuration written to {filename}")
 
 space = [
-    Integer(32, 256, name='sigma'),
-    Real(1e-5, 1e-3, name='rate', prior='log-uniform'),
-    Real(300, 700, name='mw_high')
+    # --- Learning Strategy ---
+    Integer(32, 256, name="sigma"),
+    Real(1e-5, 1e-3, name="rate", prior="log-uniform"),
+
+    # --- Diversity Filter ---
+    Integer(10, 100, name="bucket_size"),
+    Real(0.0, 1.0, name="minscore"),
+    Real(0.0, 1.0, name="minsimilarity"),
+    Real(0.1, 1.0, name="penalty_multiplier"),   
+
+    # --- Stage 1: Termination Criteria ---
+    Real(0.5, 1.0, name="max_score_stage1"),    
+    Integer(10, 50, name="min_steps_stage1"),   
+    Integer(50, 200, name="max_steps_stage1"),   
+
+    # --- Stage 1: MW Transform (Double Sigmoid) ---
+    Real(200, 600, name="mw_low"),                
+    Real(400, 800, name="mw_high"),             
+    Real(100, 1000, name="mw_coef_div"),        
+    Real(5, 40, name="mw_coef_si"),            
+    Real(5, 40, name="mw_coef_se"),            
+
+    # --- Stage 2: Termination Criteria ---
+    Real(0.5, 1.0, name="max_score_stage2"),     
+    Integer(5, 50, name="min_steps_stage2"),     
+    Integer(50, 200, name="max_steps_stage2"),    
+
+    # --- Stage 3: Termination Criteria ---
+    Real(0.5, 1.0, name="max_score_stage3"),     
+    Integer(5, 50, name="min_steps_stage3"),      
+    Integer(50, 200, name="max_steps_stage3"),   
 ]
 
 def create_config_toml_for_bo(params, output_dir, config_filename, cell_line):
