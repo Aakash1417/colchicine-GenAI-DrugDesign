@@ -4,7 +4,7 @@ import subprocess
 import shutil
 import sys
 
-def combine_sections(output_dir):
+def combine_sections(output_dir, cell_line_name):
     """Combine all sections into a single TOML string."""
     sections = [
         get_main_section(output_dir),
@@ -13,14 +13,14 @@ def combine_sections(output_dir):
         # get_diversity_filter_section(), # TODO get this working later
         get_stage1_scoring(output_dir),
         get_rdkit_scoring(output_dir),
-        get_custom_qsar_scoring(output_dir)
+        get_custom_qsar_scoring(output_dir, cell_line_name)
     ]
     return "\n".join(sections)
 
-def create_config_toml(output_dir, filename):
+def create_config_toml(output_dir, filename, cell_line_name):
     """Write the combined TOML content to a file."""
     
-    toml_content = combine_sections(output_dir)
+    toml_content = combine_sections(output_dir, cell_line_name)
     with open(filename, "w") as file:
         file.write(toml_content)
     print(f"TOML configuration written to {filename}")
@@ -29,14 +29,20 @@ if __name__ == "__main__":
     OUTPUT_DIR = "experiment"
     CONFIG_FILE = f"{OUTPUT_DIR}/output_config.toml"
     LOG_FILE = f"{OUTPUT_DIR}/staged_learning.log"
+    CELL_LINE = str()
 
-    if len(sys.argv) > 1 and sys.argv[1].lower() == "clear":
-        if os.path.exists(OUTPUT_DIR):
-            print(f"Clearing '{OUTPUT_DIR}' folder...")
-            shutil.rmtree(OUTPUT_DIR)
-
+    if os.path.exists(OUTPUT_DIR):
+        print(f"Clearing '{OUTPUT_DIR}' folder...")
+        shutil.rmtree(OUTPUT_DIR)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    create_config_toml(OUTPUT_DIR, CONFIG_FILE)
+
+    if len(sys.argv) > 1:
+        CELL_LINE = sys.argv[1]
+    else:
+        print("MIssing cell_line")
+        sys.exit(1)
+
+    create_config_toml(OUTPUT_DIR, CONFIG_FILE, CELL_LINE)
     
     command = ["reinvent", "-l", LOG_FILE, CONFIG_FILE]
     

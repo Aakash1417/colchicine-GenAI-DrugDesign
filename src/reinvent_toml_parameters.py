@@ -139,7 +139,7 @@ weight = 0.5
 name = "SA Score"
 '''
 
-def get_custom_qsar_scoring(output_dir):
+def get_custom_qsar_scoring(output_dir, cell_line_name):
     return f'''### Stage 3
 [[stage]]
 
@@ -161,7 +161,7 @@ weight = 0.6
 name = "Custom QSAR model"
 
 params.executable = "../venv-reinvent4/bin/python"
-params.args = "chemprop_qsar.py XGBoost_Descriptors_pIC50_MCF-7.joblib"
+params.args = "chemprop_qsar.py XGBoost_Descriptors_pIC50_{cell_line_name}.joblib"
 
 '''
     # [component.ExternalProcess.transform]
