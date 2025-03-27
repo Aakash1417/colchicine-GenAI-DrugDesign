@@ -40,18 +40,10 @@ penalty_multiplier = 0.5
 '''
 
 def get_stage1_scoring(output_dir):
-    #TODO: unwated smarts filtering
-    # R1 or R2 substitutions that are not -O-R (i.e., no single-bonded O to a carbon)
-    # "[*:1][!O]",         # R1 is not attached to O
-    # "[*:1]O[!#6]",       # R1 has O, but not bonded to carbon (bad ether)
-    # "[*:2][!O]",
-    # "[*:2]O[!#6]",
-    # "[*:3][!#9;!#17;!#35;!#53]",  # R3 not bonded to F, Cl, Br, or I
-    # "[*:5][O,S,N;!$([O,S,N][#6])]"  # R5 has O/S/N but not single bonded to carbon
     return f'''### Stage 1
 [[stage]]
 
-chkpt_file = '{output_dir}/test1.chkpt'
+chkpt_file = '{output_dir}/filtering_stage.chkpt'
 
 termination = "simple"
 max_score = 0.6
@@ -110,11 +102,11 @@ transform.coef_si = 20.0
 transform.coef_se = 20.0
 '''
 
-def get_rdkit_scoring(output_dir):
+def get_qed_scoring(output_dir):
     return f'''### Stage 2
 [[stage]]
 
-chkpt_file = '{output_dir}/test2.chkpt'
+chkpt_file = '{output_dir}/qed_stage.chkpt'
 
 termination = "simple"
 max_score = 0.7
@@ -130,6 +122,21 @@ type = "geometric_mean"
 [[stage.scoring.component.QED.endpoint]]
 weight = 0.5
 name = "QED Score"
+'''
+
+def get_SA_scoring(output_dir):
+    return f'''### Stage 3
+[[stage]]
+
+chkpt_file = '{output_dir}/SA_stage.chkpt'
+
+termination = "simple"
+max_score = 0.7
+min_steps = 10
+max_steps = 100
+
+[stage.scoring]
+type = "geometric_mean"
 
 [[stage.scoring.component]]
 [stage.scoring.component.SAScore]
@@ -138,13 +145,12 @@ name = "QED Score"
 weight = 0.5
 name = "SA Score"
 '''
-    #TODO: split the scoring of sascore and qed into 2 different
 
 def get_custom_qsar_scoring(output_dir, cell_line_name):
     return f'''### Stage 3
 [[stage]]
 
-chkpt_file = '{output_dir}/test3.chkpt'
+chkpt_file = '{output_dir}/qsar_stage.chkpt'
 
 termination = "simple"
 max_score = 0.7

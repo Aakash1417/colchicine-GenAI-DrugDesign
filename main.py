@@ -1,4 +1,4 @@
-from src.reinvent_toml_parameters import get_main_section, get_parameters_section,get_learning_strategy_section,get_stage1_scoring,get_rdkit_scoring, get_custom_qsar_scoring
+from src.reinvent_toml_parameters import get_main_section, get_parameters_section,get_learning_strategy_section,get_stage1_scoring,get_qed_scoring,get_SA_scoring, get_custom_qsar_scoring
 import os
 import subprocess
 import shutil
@@ -17,7 +17,8 @@ def create_config_toml(output_dir, filename, cell_line_name):
         get_learning_strategy_section(),
         # get_diversity_filter_section(), # TODO get this working later
         get_stage1_scoring(output_dir),
-        get_rdkit_scoring(output_dir),
+        get_qed_scoring(output_dir),
+        get_SA_scoring(output_dir),
         # get_custom_qsar_scoring(output_dir, cell_line_name)
     ]
     
