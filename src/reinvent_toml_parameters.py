@@ -23,11 +23,11 @@ unique_sequences = true
 randomize_smiles = false
 '''
 
-def get_learning_strategy_section():
-    return '''[learning_strategy]
+def get_learning_strategy_section(rate, sigma):
+    return f'''[learning_strategy]
 type = "dap"
-sigma = 128
-rate = 0.0001
+sigma = {sigma}
+rate = {rate}
 '''
 
 def get_diversity_filter_section():
@@ -147,7 +147,7 @@ name = "SA Score"
 '''
 
 def get_custom_qsar_scoring(output_dir, cell_line_name):
-    return f'''### Stage 3
+    return f'''### Stage 4
 [[stage]]
 
 chkpt_file = '{output_dir}/qsar_stage.chkpt'
