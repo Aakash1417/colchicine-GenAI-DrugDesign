@@ -144,6 +144,11 @@ type = "geometric_mean"
 [[stage.scoring.component.SAScore.endpoint]]
 weight = 0.5
 name = "SA Score"
+
+transform.type = "reverse_sigmoid"
+transform.high = 10
+transform.low = 1
+transform.k = 0.5
 '''
 
 def get_custom_qsar_scoring(output_dir, cell_line_name):
