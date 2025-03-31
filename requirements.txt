@@ -3,3 +3,4 @@ pandas
 xgboost
 joblib
 scikit-optimize
+rdkit==2024.9.6

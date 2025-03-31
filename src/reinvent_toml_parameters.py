@@ -5,7 +5,7 @@ tb_logdir = "{output_dir}/tb_logs"
 json_out_config = "{output_dir}/_staged_learning.json"
 '''
 
-def get_parameters_section(output_dir):
+def get_parameters_section(output_dir, temperature, batch_size, sample_strategy):
     return f'''[parameters]
 summary_csv_prefix = "{output_dir}/staged_learning"
 use_checkpoint = false
@@ -21,6 +21,9 @@ smiles_file = "scaffolds.smi"
 batch_size = 64
 unique_sequences = true
 randomize_smiles = false
+temperature = {temperature}
+batch_size = {batch_size}
+sample_strategy = {sample_strategy}
 '''
 
 def get_learning_strategy_section(rate, sigma):
@@ -170,13 +173,12 @@ type = "geometric_mean"
 
 [[stage.scoring.component.ExternalProcess.endpoint]]
 weight = 0.6
-name = "Custom QSAR model"
+name = "pIC50 Score"
 
 params.executable = "../venv-reinvent4/bin/python"
-params.args = "chemprop_qsar.py XGBoost_Descriptors_pIC50_{cell_line_name}.joblib"
-
+params.args = "chemprop_qsar.py {cell_line_name}"
+transform.type = "sigmoid"
+transform.high = 9
+transform.low = 4
+transform.k = 0.6
 '''
-    # [component.ExternalProcess.transform]
-    # type = "sigmoid"
-    # low = 5.0
-    # high = 9.0

@@ -5,7 +5,7 @@ import shutil
 import sys
 import random
 from skopt import gp_minimize, Optimizer
-from skopt.space import Real, Integer
+from skopt.space import Real, Integer, Categorical
 from skopt.utils import use_named_args
 import pandas as pd
 import numpy as np
@@ -17,22 +17,26 @@ def create_config_toml(params, output_dir, filename, cell_line_name):
     
     sections = [
         get_main_section(output_dir),
-        get_parameters_section(output_dir),
+        get_parameters_section(output_dir, params['temperature'], params['batch_size'], params['sample_strategy']),
         get_learning_strategy_section(params['rate'], params['sigma']),
         # get_diversity_filter_section(), # TODO get this working later
         get_stage1_scoring(output_dir),
         get_qed_scoring(output_dir),
         get_SA_scoring(output_dir),
-        # get_custom_qsar_scoring(output_dir, cell_line_name)
+        get_custom_qsar_scoring(output_dir, cell_line_name)
     ]
     
     toml_content = "\n".join(sections)
 
     with open(filename, "w") as file:
         file.write(toml_content)
-    print(f"TOML configuration written to {filename}")
 
 space = [
+    # --- Parameters ---
+    Real(0.5, 3, name="temperature"),
+    Integer(16, 256, name="batch_size"),
+    Categorical(["multinomial", "beamsearch"], name="sample_strategy"),
+
     # --- Learning Strategy ---
     Integer(32, 256, name="sigma"),
     Real(1e-5, 1e-3, name="rate", prior="log-uniform"),
@@ -44,24 +48,14 @@ space = [
     Real(0.1, 1.0, name="penalty_multiplier"),   
 
     # --- Stage 1: Termination Criteria ---
-    Real(0.5, 1.0, name="max_score_stage1"),    
     Integer(10, 50, name="min_steps_stage1"),   
-    Integer(50, 200, name="max_steps_stage1"),   
-
-    # --- Stage 1: MW Transform (Double Sigmoid) ---
-    Real(200, 600, name="mw_low"),                
-    Real(400, 800, name="mw_high"),             
-    Real(100, 1000, name="mw_coef_div"),        
-    Real(5, 40, name="mw_coef_si"),            
-    Real(5, 40, name="mw_coef_se"),            
+    Integer(50, 200, name="max_steps_stage1"),      
 
     # --- Stage 2: Termination Criteria ---
-    Real(0.5, 1.0, name="max_score_stage2"),     
     Integer(5, 50, name="min_steps_stage2"),     
     Integer(50, 200, name="max_steps_stage2"),    
 
     # --- Stage 3: Termination Criteria ---
-    Real(0.5, 1.0, name="max_score_stage3"),     
     Integer(5, 50, name="min_steps_stage3"),      
     Integer(50, 200, name="max_steps_stage3"),   
 ]
@@ -87,10 +81,8 @@ def evaluate_params_bo(params, cell_line):
         filtered = df[(df["step"] == max_step) & (df["Score"] > 0)]
         top10 = filtered.sort_values(by="Score", ascending=False).head(10)
         score = -top10["Score"].mean()
-    except subprocess.CalledProcessError as e:
+    except:
         return score
-
-    print(f"Done thingy! score: {score}")
 
     return score
 
@@ -112,7 +104,7 @@ def run_bayesian_optimization(cell_line, max_successful_calls=10, n_random_start
             tried_params.append(next_params)
             tried_scores.append(score)
             print(f"Success {successful_evals}/{max_successful_calls}: Score = {score}\n")
-        except subprocess.CalledProcessError:
+        except:
             print("Reinvent subprocess failed. Retrying with different params...\n")
             continue
 
@@ -123,32 +115,45 @@ def run_bayesian_optimization(cell_line, max_successful_calls=10, n_random_start
     print("Best parameters found:", best_params)
     print("Best score:", best_score)
 
-if __name__ == "__main__":
-    # OUTPUT_DIR = "experiment"
-    # CONFIG_FILE = f"{OUTPUT_DIR}/output_config.toml"
-    # LOG_FILE = f"{OUTPUT_DIR}/staged_learning.log"
-    CELL_LINE = str()
-
-    # if os.path.exists(OUTPUT_DIR):
-    #     print(f"Clearing '{OUTPUT_DIR}' folder...")
-    #     shutil.rmtree(OUTPUT_DIR)
-    # os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-    if len(sys.argv) > 1:
-        CELL_LINE = sys.argv[1]
-    else:
-        print("MIssing cell_line")
+if __name__ == "__main__":    
+    if len(sys.argv) < 3:
+        print("Usage: python your_script.py <cell_line> <mode: optimize | run>")
         sys.exit(1)
-        
-    run_bayesian_optimization(cell_line=CELL_LINE)
+    
+    CELL_LINE = sys.argv[1]
+    MODE = sys.argv[2].lower()
 
-    # create_config_toml(OUTPUT_DIR, CONFIG_FILE, CELL_LINE)
-    
-    # command = ["reinvent", "-l", LOG_FILE, CONFIG_FILE]
-    
-    # try:
-    #     result = subprocess.run(command, capture_output=True, text=True, check=True)
-    #     print(result.stdout)
-    # except subprocess.CalledProcessError as e:
-    #     print("An error occurred while running REINVENT:")
-    #     print(e.stderr)
+    if MODE == 'optimize':
+        run_bayesian_optimization(cell_line=CELL_LINE)
+    else:
+        OUTPUT_DIR = "experiment"
+        CONFIG_FILE = f"{OUTPUT_DIR}/output_config.toml"
+        LOG_FILE = f"{OUTPUT_DIR}/staged_learning.log"
+        
+        if os.path.exists(OUTPUT_DIR):
+            print(f"Clearing '{OUTPUT_DIR}' folder...")
+            shutil.rmtree(OUTPUT_DIR)
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
+        
+        best_params = {
+            "temperature":  1,
+            "batch_size":  64,
+            "sample_strategy":  "multinomial",
+            "sigma":  128,
+            "rate":  0.0001,
+            "min_steps_stage2":  10,
+            "max_steps_stage2":  100,
+            "min_steps_stage3":  10,
+            "max_steps_stage3":  100,
+        }
+        
+        create_config_toml(best_params, OUTPUT_DIR, CONFIG_FILE, CELL_LINE)
+        
+        command = ["reinvent", "-l", LOG_FILE, CONFIG_FILE]
+        
+        try:
+            result = subprocess.run(command, capture_output=True, text=True, check=True)
+            print("Run completed")
+        except subprocess.CalledProcessError as e:
+            print("An error occurred while running REINVENT:")
+            print(e.stderr)

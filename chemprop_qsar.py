@@ -4,6 +4,12 @@ import joblib
 import pandas as pd
 import xgboost as xgb
 import pickle
+import numpy as np
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler
+from rdkit import Chem
+from rdkit.ML.Descriptors import MoleculeDescriptors
+from rdkit.Chem import Descriptors
 
 # Read SMILES from stdin
 smiles_list = [smiles.strip() for smiles in sys.stdin]
@@ -14,24 +20,32 @@ try:
 except FileNotFoundError:
     print(f"Error: Model file '{model_filename}' not found.", file=sys.stderr)
     sys.exit(1)
-    
-with open("smiles_list.pkl", "wb") as f:
-    pickle.dump(smiles_list, f)
 
+def preprocess_descriptors(descriptors):
+    imputer = SimpleImputer(strategy='mean')
+    scaler = StandardScaler()
 
-# def smiles_to_descriptors(smiles_list):
-#     """
-#     Convert SMILES to descriptors. Replace this with actual descriptor calculation.
-#     For now, returning dummy features for XGBoost.
-#     """
-#     import numpy as np
-#     num_features = model.get_booster().num_features()
-#     return pd.DataFrame(np.random.rand(len(smiles_list), num_features))
+    descriptors_imputed = imputer.fit_transform(descriptors)
+    descriptors_scaled = scaler.fit_transform(descriptors_imputed)
+    descriptors_scaled = np.nan_to_num(descriptors_scaled, nan=0.0)
+    return descriptors_scaled
 
-# X = smiles_to_descriptors(smiles_list)
+descriptor_calculator = MoleculeDescriptors.MolecularDescriptorCalculator([desc[0] for desc in Descriptors._descList])
+descriptor_names = descriptor_calculator.GetDescriptorNames()
 
-# scores = model.predict(X)
+descriptor_rows = []
 
-data = {"version": 1, "payload": {"predictions": list([123,123])}}
+for smiles in smiles_list:
+    mol = Chem.MolFromSmiles(smiles)
+    if mol:
+        descriptor_values = descriptor_calculator.CalcDescriptors(mol)
+        descriptor_rows.append(descriptor_values)
+
+# Creating dataFrame from descriptor values
+descriptors_df = pd.DataFrame(descriptor_rows, columns=descriptor_names)
+descriptors_df = preprocess_descriptors(descriptors_df)
+pIC50_predictions = model.predict(descriptors_df)
+
+data = {"version": 1, "payload": {"predictions": list(map(float, pIC50_predictions))}}
 
 print(json.dumps(data))
